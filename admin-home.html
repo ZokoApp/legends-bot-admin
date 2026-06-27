@@ -484,6 +484,9 @@ async function loadStats() {
     // Stats no disponibles, queda en —
   }
 }
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 
 loadStats();
 </script>
