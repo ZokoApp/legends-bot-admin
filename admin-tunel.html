@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Túnel — Legends Admin</title>
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: rgba(255,255,255,0.06);
+    --accent: #ff4d1c;
+    --accent2: #ff8c42;
+    --text: #f0f0f0;
+    --muted: #555;
+    --success: #00e676;
+    --danger: #ef4444;
+    --warning: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,77,28,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,77,28,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0; pointer-events: none;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(100px); opacity: 0.08;
+    z-index: 0; pointer-events: none;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 350px; height: 350px; background: var(--accent); bottom: -80px; right: -80px; }
+  .orb-2 { width: 250px; height: 250px; background: var(--warning); top: 100px; left: -80px; animation-delay: -7s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0); }
+    to   { transform: translate(20px, 20px); }
+  }
+
+  .page {
+    position: relative; z-index: 10;
+    max-width: 420px; margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex; align-items: center;
+    gap: 14px; padding: 20px 0 28px;
+  }
+
+  .btn-back {
+    width: 38px; height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted);
+    font-size: 1rem; transition: all 0.2s;
+    flex-shrink: 0; text-decoration: none;
+  }
+  .btn-back:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+  .topbar-info { flex: 1; }
+  .topbar-title { font-size: 1.1rem; font-weight: 700; }
+  .topbar-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 1px; margin-top: 2px;
+  }
+
+  /* STATUS CARD */
+  .status-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative; overflow: hidden;
+    opacity: 0; animation: fadeUp 0.4s ease forwards;
+  }
+
+  .status-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .status-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 16px;
+  }
+
+  .status-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 1px;
+  }
+
+  .pill-online {
+    background: rgba(0,230,118,0.08);
+    border: 1px solid rgba(0,230,118,0.2);
+    color: var(--success);
+  }
+
+  .pill-offline {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: var(--danger);
+  }
+
+  .pill-checking {
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    color: var(--warning);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .dot-online  { background: var(--success); animation: blink 2s infinite; }
+  .dot-offline { background: var(--danger); }
+  .dot-check   { background: var(--warning); animation: blink 0.8s infinite; }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .url-actual {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.6;
+    padding: 12px;
+    background: #0a0a0a;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    min-height: 44px;
+  }
+
+  .url-meta {
+    display: flex; justify-content: space-between;
+    align-items: center;
+  }
+
+  .url-meta-left {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .btn-copy {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 10px;
+    color: var(--muted); cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+  .btn-copy.copied { color: var(--success); border-color: rgba(0,230,118,0.3); }
+
+  /* PING STATS */
+  .ping-row {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+
+  .ping-stat {
+    flex: 1; background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px;
+    text-align: center;
+  }
+
+  .ping-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem; font-weight: 700;
+    color: var(--text);
+  }
+
+  .ping-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem; color: var(--muted);
+    letter-spacing: 1px; margin-top: 3px;
+  }
+
+  /* UPDATE CARD */
+  .update-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    opacity: 0; animation: fadeUp 0.4s ease 0.15s forwards;
+  }
+
+  .update-title {
+    font-size: 0.9rem; font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .update-desc {
+    font-size: 0.75rem; color: var(--muted);
+    margin-bottom: 18px; line-height: 1.5;
+  }
+
+  .form-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    display: block; margin-bottom: 8px;
+  }
+
+  .input-wrap { position: relative; margin-bottom: 14px; }
+
+  .form-input {
+    width: 100%;
+    padding: 13px 14px;
+    background: #0a0a0a;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: rgba(255,77,28,0.5);
+    box-shadow: 0 0 0 3px rgba(255,77,28,0.1);
+  }
+  .form-input::placeholder { color: var(--muted); font-size: 0.72rem; }
+
+  .input-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; color: var(--muted);
+    margin-top: -10px; margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-update {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 13px;
+    color: white; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,77,28,0.3);
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-update:hover { opacity: 0.9; box-shadow: 0 4px 30px rgba(255,77,28,0.5); }
+  .btn-update:active { transform: scale(0.98); }
+  .btn-update:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* HISTORIAL */
+  .historial-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    opacity: 0; animation: fadeUp 0.4s ease 0.3s forwards;
+  }
+
+  .historial-title {
+    font-size: 0.9rem; font-weight: 700;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .historial-item {
+    display: flex; align-items: flex-start;
+    gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .historial-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .hist-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0; margin-top: 5px;
+  }
+  .hist-dot-ok  { background: var(--success); }
+  .hist-dot-err { background: var(--danger); }
+
+  .hist-url {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem; color: var(--text);
+    word-break: break-all; line-height: 1.5;
+    flex: 1;
+  }
+
+  .hist-fecha {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem; color: var(--muted);
+    white-space: nowrap; flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .hist-empty {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted);
+    letter-spacing: 1px; text-align: center;
+    padding: 20px 0;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 12px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 1px;
+    z-index: 9999; white-space: nowrap;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok   { color: var(--success); border-color: rgba(0,230,118,0.2); }
+  .toast.err  { color: var(--danger);  border-color: rgba(239,68,68,0.2); }
+  .toast.warn { color: var(--warning); border-color: rgba(251,191,36,0.2); }
+
+  /* CONFIRM OVERLAY */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: none; align-items: center;
+    justify-content: center; padding: 20px;
+  }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-card {
+    background: #111;
+    border: 1px solid rgba(255,77,28,0.2);
+    border-radius: 20px; padding: 24px;
+    width: 100%; max-width: 340px;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .confirm-icon { font-size: 2rem; text-align: center; margin-bottom: 12px; }
+  .confirm-title { font-size: 1rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+  .confirm-url {
+    font-family: 'Space Mono', monospace; font-size: 0.65rem;
+    color: var(--accent2); text-align: center; margin-bottom: 20px;
+    word-break: break-all; line-height: 1.6;
+    padding: 10px; background: rgba(255,77,28,0.05);
+    border-radius: 8px; border: 1px solid rgba(255,77,28,0.1);
+  }
+
+  .confirm-btns { display: flex; gap: 10px; }
+
+  .btn-cancel {
+    flex: 1; padding: 13px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px; color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-cancel:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  .btn-confirm {
+    flex: 1; padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 12px;
+    color: white; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-confirm:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<script>
+  if (!sessionStorage.getItem("admin_auth")) window.location.href = "admin-login.html";
+</script>
+
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <div class="confirm-icon">⚡</div>
+    <div class="confirm-title">¿Actualizar túnel?</div>
+    <div class="confirm-url" id="confirmUrl"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-confirm" onclick="ejecutarUpdate()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a class="btn-back" href="admin-home.html">←</a>
+    <div class="topbar-info">
+      <div class="topbar-title">Túnel</div>
+      <div class="topbar-sub">CLOUDFLARE TUNNEL</div>
+    </div>
+  </div>
+
+  <!-- STATUS CARD -->
+  <div class="status-card">
+    <div class="status-header">
+      <div class="status-label">Estado actual</div>
+      <div class="status-pill pill-checking" id="statusPill">
+        <div class="status-dot dot-check"></div>
+        <span>VERIFICANDO</span>
+      </div>
+    </div>
+
+    <div class="url-actual" id="urlActual">Cargando...</div>
+
+    <div class="url-meta">
+      <div class="url-meta-left" id="urlFecha">—</div>
+      <button class="btn-copy" id="btnCopy" onclick="copiarUrl()">COPIAR</button>
+    </div>
+
+    <div class="ping-row">
+      <div class="ping-stat">
+        <div class="ping-val" id="pingMs">—</div>
+        <div class="ping-label">PING</div>
+      </div>
+      <div class="ping-stat">
+        <div class="ping-val" id="pingStatus">—</div>
+        <div class="ping-label">HEALTH</div>
+      </div>
+      <div class="ping-stat">
+        <div class="ping-val" id="pingUptime">—</div>
+        <div class="ping-label">UPTIME</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPDATE CARD -->
+  <div class="update-card">
+    <div class="update-title">🔗 Actualizar URL</div>
+    <div class="update-desc">Ingresá la nueva URL del túnel de Cloudflare. Se actualizará en GitHub y todos los agentes la recibirán automáticamente.</div>
+
+    <label class="form-label">Nueva URL del túnel</label>
+    <div class="input-wrap">
+      <input class="form-input" type="url" id="nuevaUrl"
+        placeholder="https://xxxx-xxxx.trycloudflare.com">
+    </div>
+    <div class="input-hint">Formato: https://[id].trycloudflare.com</div>
+
+    <button class="btn-update" onclick="confirmarUpdate()">
+      <span>⚡</span> Actualizar túnel
+    </button>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="historial-card">
+    <div class="historial-title">
+      🕐 Historial
+    </div>
+    <div id="historialList">
+      <div class="hist-empty">SIN HISTORIAL</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE    = localStorage.getItem("legends_api") || "";
+const GITHUB_REPO = "ZokoApp/legends-bot-v2";
+const GITHUB_FILE = "config.js";
+
+let urlActual  = "";
+let historial  = JSON.parse(localStorage.getItem("tunel_historial") || "[]");
+let pendingUrl = "";
+
+// ─── INIT ─────────────────────────────────────
+async function init() {
+  renderHistorial();
+  await cargarUrlActual();
+  await verificarPing();
+}
+
+// ─── CARGAR URL ACTUAL ────────────────────────
+async function cargarUrlActual() {
+  try {
+    const res  = await fetch(API_BASE + "/admin/tunel");
+    const data = await res.json();
+
+    if (data.ok && data.url) {
+      urlActual = data.url;
+      document.getElementById("urlActual").textContent = data.url;
+      document.getElementById("urlFecha").textContent =
+        data.fecha ? `Actualizado: ${data.fecha}` : "Sin fecha";
+    } else {
+      document.getElementById("urlActual").textContent = "No configurada";
+    }
+  } catch(e) {
+    document.getElementById("urlActual").textContent = "Error al cargar";
+  }
+}
+
+// ─── PING ─────────────────────────────────────
+async function verificarPing() {
+  if (!urlActual) {
+    setStatus("offline");
+    return;
+  }
+
+  setStatus("checking");
+  const t0 = Date.now();
+
+  try {
+    const res = await fetch(urlActual + "/health", {
+      signal: AbortSignal.timeout(6000)
+    });
+    const ms = Date.now() - t0;
+
+    if (res.ok) {
+      setStatus("online");
+      document.getElementById("pingMs").textContent = ms + "ms";
+      document.getElementById("pingStatus").textContent = "OK";
+      document.getElementById("pingUptime").textContent = "↑";
+    } else {
+      setStatus("offline");
+      document.getElementById("pingMs").textContent = ms + "ms";
+      document.getElementById("pingStatus").textContent = res.status;
+      document.getElementById("pingUptime").textContent = "↓";
+    }
+  } catch(e) {
+    setStatus("offline");
+    document.getElementById("pingMs").textContent = "—";
+    document.getElementById("pingStatus").textContent = "ERR";
+    document.getElementById("pingUptime").textContent = "↓";
+  }
+}
+
+function setStatus(state) {
+  const pill = document.getElementById("statusPill");
+  if (state === "online") {
+    pill.className = "status-pill pill-online";
+    pill.innerHTML = `<div class="status-dot dot-online"></div><span>EN LÍNEA</span>`;
+  } else if (state === "offline") {
+    pill.className = "status-pill pill-offline";
+    pill.innerHTML = `<div class="status-dot dot-offline"></div><span>OFFLINE</span>`;
+  } else {
+    pill.className = "status-pill pill-checking";
+    pill.innerHTML = `<div class="status-dot dot-check"></div><span>VERIFICANDO</span>`;
+  }
+}
+
+// ─── COPIAR URL ───────────────────────────────
+function copiarUrl() {
+  if (!urlActual) return;
+  navigator.clipboard.writeText(urlActual).then(() => {
+    const btn = document.getElementById("btnCopy");
+    btn.textContent = "COPIADO ✓";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "COPIAR";
+      btn.classList.remove("copied");
+    }, 2000);
+  });
+}
+
+// ─── CONFIRMAR UPDATE ─────────────────────────
+function confirmarUpdate() {
+  const url = document.getElementById("nuevaUrl").value.trim();
+  if (!url) {
+    showToast("Ingresá una URL", "warn");
+    return;
+  }
+  if (!url.startsWith("https://")) {
+    showToast("La URL debe empezar con https://", "warn");
+    return;
+  }
+
+  pendingUrl = url;
+  document.getElementById("confirmUrl").textContent = url;
+  document.getElementById("confirmOverlay").classList.add("open");
+}
+
+function closeConfirm() {
+  document.getElementById("confirmOverlay").classList.remove("open");
+  pendingUrl = "";
+}
+
+// ─── EJECUTAR UPDATE ──────────────────────────
+async function ejecutarUpdate() {
+  closeConfirm();
+
+  const btn = document.querySelector(".btn-update");
+  btn.disabled = true;
+  btn.innerHTML = "<span>⏳</span> Actualizando...";
+
+  try {
+    const res  = await fetch(API_BASE + "/admin/tunel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: pendingUrl })
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast("Túnel actualizado ✓", "ok");
+      urlActual = pendingUrl;
+      document.getElementById("urlActual").textContent = pendingUrl;
+      document.getElementById("nuevaUrl").value = "";
+
+      // Guardar en historial local
+      historial.unshift({
+        url: pendingUrl,
+        fecha: new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" }),
+        ok: true
+      });
+      historial = historial.slice(0, 10);
+      localStorage.setItem("tunel_historial", JSON.stringify(historial));
+      renderHistorial();
+
+      // Re-verificar ping
+      setTimeout(verificarPing, 1500);
+    } else {
+      showToast(data.error || "Error al actualizar", "err");
+    }
+  } catch(e) {
+    showToast("Error de conexión", "err");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "<span>⚡</span> Actualizar túnel";
+}
+
+// ─── HISTORIAL ────────────────────────────────
+function renderHistorial() {
+  const list = document.getElementById("historialList");
+  if (historial.length === 0) {
+    list.innerHTML = `<div class="hist-empty">SIN HISTORIAL</div>`;
+    return;
+  }
+
+  list.innerHTML = historial.map(h => `
+    <div class="historial-item">
+      <div class="hist-dot ${h.ok ? "hist-dot-ok" : "hist-dot-err"}"></div>
+      <div class="hist-url">${h.url}</div>
+      <div class="hist-fecha">${h.fecha ? h.fecha.slice(0,16) : "—"}</div>
+    </div>
+  `).join("");
+}
+
+// ─── TOAST ────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = "ok") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// ─── INIT ─────────────────────────────────────
+init();
+</script>
+
+</body>
+</html>

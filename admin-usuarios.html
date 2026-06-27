@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Usuarios — Legends Admin</title>
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: rgba(255,255,255,0.06);
+    --accent: #ff4d1c;
+    --accent2: #ff8c42;
+    --text: #f0f0f0;
+    --muted: #555;
+    --purple: #a855f7;
+    --success: #00e676;
+    --danger: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(168,85,247,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0; pointer-events: none;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(100px); opacity: 0.07;
+    z-index: 0; pointer-events: none;
+  }
+  .orb-1 { width: 400px; height: 400px; background: var(--purple); top: -100px; left: -100px; }
+
+  .page {
+    position: relative; z-index: 10;
+    max-width: 420px; margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex; align-items: center;
+    gap: 14px; padding: 20px 0 24px;
+  }
+
+  .btn-back {
+    width: 38px; height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted);
+    font-size: 1rem; transition: all 0.2s;
+    flex-shrink: 0; text-decoration: none;
+  }
+  .btn-back:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+  .topbar-info { flex: 1; }
+  .topbar-title { font-size: 1.1rem; font-weight: 700; }
+  .topbar-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 1px; margin-top: 2px;
+  }
+
+  .btn-nuevo {
+    padding: 9px 14px;
+    background: linear-gradient(135deg, var(--purple), #7c3aed);
+    border: none; border-radius: 11px;
+    color: white; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.78rem;
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(168,85,247,0.3);
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-nuevo:hover { opacity: 0.9; }
+  .btn-nuevo:active { transform: scale(0.97); }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative; margin-bottom: 16px;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: rgba(168,85,247,0.4); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); pointer-events: none;
+  }
+
+  /* FILTROS */
+  .filtros {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+
+  .filtro-btn {
+    flex: 1; padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .filtro-btn.active {
+    background: rgba(168,85,247,0.1);
+    border-color: rgba(168,85,247,0.3);
+    color: #c084fc;
+  }
+
+  /* LOADING */
+  .loading-state { text-align: center; padding: 60px 0; }
+  .loader {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted); letter-spacing: 2px;
+  }
+
+  /* USER CARDS */
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px;
+    opacity: 0; animation: fadeUp 0.3s ease forwards;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .user-card:hover { border-color: rgba(168,85,247,0.2); background: var(--surface2); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .user-card.inactivo { opacity: 0.5; }
+
+  .user-avatar {
+    width: 44px; height: 44px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+
+  .user-nombre {
+    font-size: 0.9rem; font-weight: 600;
+    color: var(--text); margin-bottom: 2px;
+  }
+
+  .user-email {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted);
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-meta {
+    display: flex; gap: 6px; margin-top: 6px;
+    align-items: center;
+  }
+
+  .rol-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem; padding: 3px 7px;
+    border-radius: 5px; letter-spacing: 0.5px;
+  }
+  .rol-admin  { background: rgba(255,77,28,0.1); color: var(--accent2); border: 1px solid rgba(255,77,28,0.2); }
+  .rol-agente { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+
+  .status-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem; padding: 3px 7px;
+    border-radius: 5px; letter-spacing: 0.5px;
+  }
+  .status-activo   { background: rgba(0,230,118,0.08); color: var(--success); border: 1px solid rgba(0,230,118,0.15); }
+  .status-inactivo { background: rgba(255,255,255,0.03); color: var(--muted); border: 1px solid var(--border); }
+
+  .user-actions {
+    display: flex; flex-direction: column; gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px; border: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .btn-icon:hover { border-color: rgba(255,255,255,0.15); background: #1e1e1e; }
+  .btn-icon.danger:hover { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: none; align-items: flex-end;
+    justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 24px;
+    width: 100%; max-width: 420px;
+    max-height: 85vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-top {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 24px;
+  }
+  .modal-title { font-size: 1rem; font-weight: 700; }
+  .btn-close-modal {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px;
+    color: var(--muted); cursor: pointer; font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .btn-close-modal:hover { color: var(--text); }
+
+  /* FORM */
+  .form-field { margin-bottom: 16px; }
+
+  .form-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    display: block; margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 13px 14px;
+    background: #0a0a0a;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-input:focus {
+    border-color: rgba(168,85,247,0.5);
+    box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+  }
+
+  .form-select {
+    width: 100%;
+    padding: 13px 14px;
+    background: #0a0a0a;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem; outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .form-select:focus { border-color: rgba(168,85,247,0.5); }
+
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-field { flex: 1; }
+
+  .btn-submit {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, var(--purple), #7c3aed);
+    border: none; border-radius: 13px;
+    color: white; font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; margin-top: 8px;
+    box-shadow: 0 4px 20px rgba(168,85,247,0.3);
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-submit:hover { opacity: 0.9; }
+  .btn-submit:active { transform: scale(0.98); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 1px;
+    z-index: 9999; white-space: nowrap;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok  { color: var(--success); border-color: rgba(0,230,118,0.2); }
+  .toast.err { color: var(--danger);  border-color: rgba(239,68,68,0.2); }
+
+  .empty-state { text-align: center; padding: 60px 0; display: none; }
+  .empty-icon  { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+  .empty-text  {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted); letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  if (!sessionStorage.getItem("admin_auth")) window.location.href = "admin-login.html";
+</script>
+
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a class="btn-back" href="admin-home.html">←</a>
+    <div class="topbar-info">
+      <div class="topbar-title">Usuarios</div>
+      <div class="topbar-sub">GESTIÓN DE AGENTES</div>
+    </div>
+    <button class="btn-nuevo" onclick="abrirModalNuevo()">+ Nuevo</button>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar usuario..." oninput="renderUsuarios()">
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('todos', this)">TODOS</button>
+    <button class="filtro-btn" onclick="setFiltro('activo', this)">ACTIVOS</button>
+    <button class="filtro-btn" onclick="setFiltro('inactivo', this)">INACTIVOS</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-state" id="loadingState">
+    <div class="loader"></div>
+    <div class="loading-text">CARGANDO USUARIOS...</div>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">👤</div>
+    <div class="empty-text">SIN USUARIOS</div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="listaUsuarios"></div>
+
+</div>
+
+<!-- MODAL NUEVO/EDITAR -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div class="modal-title" id="modalTitle">Nuevo usuario</div>
+      <button class="btn-close-modal" onclick="closeModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="editRow">
+
+    <div class="form-field">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="fEmail" placeholder="agente@vtr.cl">
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" type="text" id="fPassword" placeholder="Contraseña de acceso">
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label">Rol</label>
+        <select class="form-select" id="fRol">
+          <option value="agente">Agente</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="fEstado">
+          <option value="si">Activo</option>
+          <option value="no">Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Usuario (login Andes)</label>
+      <input class="form-input" type="text" id="fUsuario" placeholder="USUARIO_ANDES">
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Nombre completo</label>
+      <input class="form-input" type="text" id="fNombre" placeholder="Juan Pérez">
+    </div>
+
+    <button class="btn-submit" id="btnSubmit" onclick="guardarUsuario()">
+      <span>💾</span> <span id="btnSubmitText">Crear usuario</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const API_BASE = localStorage.getItem("legends_api") || "";
+let todosUsuarios = [];
+let filtroActivo  = "todos";
+const avatarColors = [
+  ["#ff4d1c","#1a0a00"],["#3b82f6","#0a1628"],
+  ["#a855f7","#1a0a28"],["#00e676","#001a0f"],
+  ["#fbbf24","#1a1000"],["#f472b6","#1a0010"],
+];
+
+function getAvatarColor(name) {
+  let h = 0;
+  for (let c of (name||"")) h = c.charCodeAt(0) + ((h<<5)-h);
+  return avatarColors[Math.abs(h) % avatarColors.length];
+}
+function getInitials(name) {
+  return (name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+}
+
+// ─── CARGAR ───────────────────────────────────
+async function cargarUsuarios() {
+  document.getElementById("loadingState").style.display = "block";
+  document.getElementById("listaUsuarios").style.display = "none";
+  document.getElementById("emptyState").style.display = "none";
+
+  try {
+    const res  = await fetch(API_BASE + "/admin/usuarios");
+    const data = await res.json();
+    todosUsuarios = data.usuarios || [];
+  } catch(e) {
+    todosUsuarios = [];
+  }
+
+  renderUsuarios();
+}
+
+// ─── RENDER ───────────────────────────────────
+function renderUsuarios() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const lista  = document.getElementById("listaUsuarios");
+  const loading = document.getElementById("loadingState");
+  const empty   = document.getElementById("emptyState");
+
+  let items = todosUsuarios;
+
+  if (filtroActivo === "activo")   items = items.filter(u => u.activo?.toLowerCase() === "si");
+  if (filtroActivo === "inactivo") items = items.filter(u => u.activo?.toLowerCase() !== "si");
+
+  if (search) {
+    items = items.filter(u =>
+      (u.nombre||"").toLowerCase().includes(search) ||
+      (u.email||"").toLowerCase().includes(search)
+    );
+  }
+
+  loading.style.display = "none";
+
+  if (items.length === 0) {
+    lista.style.display = "none";
+    empty.style.display = "block";
+    return;
+  }
+
+  empty.style.display = "none";
+  lista.style.display = "block";
+  lista.innerHTML = "";
+
+  items.forEach((u, i) => {
+    const [bg, fg] = getAvatarColor(u.nombre || u.email);
+    const initials  = getInitials(u.nombre || u.email);
+    const activo    = u.activo?.toLowerCase() === "si";
+
+    const card = document.createElement("div");
+    card.className = `user-card${!activo ? " inactivo" : ""}`;
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    card.innerHTML = `
+      <div class="user-avatar" style="background:${bg};color:${fg}">${initials}</div>
+      <div class="user-info">
+        <div class="user-nombre">${u.nombre || "Sin nombre"}</div>
+        <div class="user-email">${u.email}</div>
+        <div class="user-meta">
+          <span class="rol-badge ${u.rol === "admin" ? "rol-admin" : "rol-agente"}">${(u.rol||"agente").toUpperCase()}</span>
+          <span class="status-badge ${activo ? "status-activo" : "status-inactivo"}">${activo ? "ACTIVO" : "INACTIVO"}</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button class="btn-icon" onclick="abrirModalEditar(${i})" title="Editar">✏️</button>
+        <button class="btn-icon danger" onclick="toggleActivo(${i})" title="${activo ? "Desactivar" : "Activar"}">
+          ${activo ? "🔴" : "🟢"}
+        </button>
+      </div>
+    `;
+
+    lista.appendChild(card);
+  });
+}
+
+// ─── FILTRO ───────────────────────────────────
+function setFiltro(f, btn) {
+  filtroActivo = f;
+  document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderUsuarios();
+}
+
+// ─── MODAL NUEVO ─────────────────────────────
+function abrirModalNuevo() {
+  document.getElementById("modalTitle").textContent = "Nuevo usuario";
+  document.getElementById("btnSubmitText").textContent = "Crear usuario";
+  document.getElementById("editRow").value = "";
+  document.getElementById("fEmail").value = "";
+  document.getElementById("fPassword").value = "";
+  document.getElementById("fRol").value = "agente";
+  document.getElementById("fEstado").value = "si";
+  document.getElementById("fUsuario").value = "";
+  document.getElementById("fNombre").value = "";
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+// ─── MODAL EDITAR ─────────────────────────────
+function abrirModalEditar(idx) {
+  const u = todosUsuarios[idx];
+  document.getElementById("modalTitle").textContent = "Editar usuario";
+  document.getElementById("btnSubmitText").textContent = "Guardar cambios";
+  document.getElementById("editRow").value = idx;
+  document.getElementById("fEmail").value    = u.email || "";
+  document.getElementById("fPassword").value = u.password || "";
+  document.getElementById("fRol").value      = u.rol || "agente";
+  document.getElementById("fEstado").value   = u.activo?.toLowerCase() === "si" ? "si" : "no";
+  document.getElementById("fUsuario").value  = u.usuario || "";
+  document.getElementById("fNombre").value   = u.nombre || "";
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+// ─── GUARDAR ─────────────────────────────────
+async function guardarUsuario() {
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.innerHTML = "<span>⏳</span> Guardando...";
+
+  const editRow = document.getElementById("editRow").value;
+  const payload = {
+    email:    document.getElementById("fEmail").value.trim(),
+    password: document.getElementById("fPassword").value.trim(),
+    rol:      document.getElementById("fRol").value,
+    activo:   document.getElementById("fEstado").value,
+    usuario:  document.getElementById("fUsuario").value.trim(),
+    nombre:   document.getElementById("fNombre").value.trim(),
+  };
+
+  if (!payload.email || !payload.password) {
+    showToast("Email y contraseña requeridos", "err");
+    btn.disabled = false;
+    btn.innerHTML = "<span>💾</span> <span id='btnSubmitText'>Guardar</span>";
+    return;
+  }
+
+  try {
+    const url    = editRow !== "" ? `${API_BASE}/admin/usuarios/${editRow}` : `${API_BASE}/admin/usuarios`;
+    const method = editRow !== "" ? "PUT" : "POST";
+    const res    = await fetch(url, {
+      method, headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast(editRow !== "" ? "Usuario actualizado ✓" : "Usuario creado ✓", "ok");
+      closeModal();
+      cargarUsuarios();
+    } else {
+      showToast(data.error || "Error al guardar", "err");
+    }
+  } catch(e) {
+    showToast("Error de conexión", "err");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "<span>💾</span> <span>Guardar</span>";
+}
+
+// ─── TOGGLE ACTIVO ───────────────────────────
+async function toggleActivo(idx) {
+  const u       = todosUsuarios[idx];
+  const activo  = u.activo?.toLowerCase() === "si" ? "no" : "si";
+
+  try {
+    const res  = await fetch(`${API_BASE}/admin/usuarios/${idx}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...u, activo })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast(activo === "si" ? "Usuario activado ✓" : "Usuario desactivado ✓", "ok");
+      cargarUsuarios();
+    }
+  } catch(e) {
+    showToast("Error de conexión", "err");
+  }
+}
+
+// ─── MODAL CLOSE ─────────────────────────────
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById("modalOverlay")) closeModal();
+}
+
+// ─── TOAST ───────────────────────────────────
+let toastTimer;
+function showToast(msg, type = "ok") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+// ─── INIT ─────────────────────────────────────
+cargarUsuarios();
+</script>
+
+</body>
+</html>

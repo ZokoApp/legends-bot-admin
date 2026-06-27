@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Admin — Legends Bot</title>
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: rgba(255,255,255,0.06);
+    --accent: #ff4d1c;
+    --accent2: #ff8c42;
+    --text: #f0f0f0;
+    --muted: #555;
+    --success: #00e676;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,77,28,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,77,28,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.08;
+    z-index: 0;
+    pointer-events: none;
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; right: -150px; }
+  .orb-2 { width: 300px; height: 300px; background: var(--purple); bottom: 100px; left: -100px; animation-delay: -7s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(20px, 30px) scale(1.08); }
+  }
+
+  /* LAYOUT */
+  .page {
+    position: relative;
+    z-index: 10;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 0 0 100px;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 0;
+    margin-bottom: 28px;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+  .topbar-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(255,77,28,0.25);
+  }
+
+  .topbar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .topbar-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 1px;
+  }
+
+  .btn-logout {
+    background: rgba(255,77,28,0.08);
+    border: 1px solid rgba(255,77,28,0.2);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-logout:hover { background: rgba(255,77,28,0.15); }
+
+  /* WELCOME */
+  .welcome {
+    padding: 0 20px;
+    margin-bottom: 28px;
+  }
+
+  .welcome-greeting {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .welcome-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+
+  .welcome-title span { color: var(--accent); }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 20px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .stat-card:nth-child(2) { animation-delay: 0.1s; }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value span {
+    font-size: 0.75rem;
+    color: var(--success);
+    font-weight: 500;
+    margin-left: 4px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    padding: 0 20px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .section-title-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* MENU CARDS */
+  .menu-grid {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .menu-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s ease forwards;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .menu-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .menu-card:hover {
+    border-color: rgba(255,255,255,0.12);
+    background: var(--surface2);
+    transform: translateY(-2px);
+  }
+
+  .menu-card:hover::after { opacity: 1; }
+  .menu-card:active { transform: scale(0.98); }
+
+  .menu-card:nth-child(1) { animation-delay: 0.15s; }
+  .menu-card:nth-child(2) { animation-delay: 0.25s; }
+  .menu-card:nth-child(3) { animation-delay: 0.35s; }
+
+  .menu-icon {
+    width: 52px; height: 52px;
+    border-radius: 15px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .icon-registros {
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.2);
+    box-shadow: 0 0 20px rgba(59,130,246,0.1);
+  }
+
+  .icon-usuarios {
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.2);
+    box-shadow: 0 0 20px rgba(168,85,247,0.1);
+  }
+
+  .icon-tunel {
+    background: rgba(255,77,28,0.1);
+    border: 1px solid rgba(255,77,28,0.2);
+    box-shadow: 0 0 20px rgba(255,77,28,0.1);
+  }
+
+  .menu-info { flex: 1; min-width: 0; }
+
+  .menu-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .menu-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .menu-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .badge-blue { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+  .badge-purple { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+  .badge-orange { background: rgba(255,77,28,0.1); color: var(--accent2); border: 1px solid rgba(255,77,28,0.2); }
+
+  .menu-arrow {
+    color: var(--muted);
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: transform 0.2s, color 0.2s;
+  }
+
+  .menu-card:hover .menu-arrow {
+    transform: translateX(3px);
+    color: var(--text);
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem;
+    color: #222;
+    letter-spacing: 2px;
+    padding: 0 20px;
+  }
+
+  /* PULSE LINE */
+  .pulse-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 24px 20px;
+    opacity: 0.3;
+    animation: pulseLine 3s ease-in-out infinite;
+  }
+
+  @keyframes pulseLine {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.5; }
+  }
+</style>
+</head>
+<body>
+
+<script>
+  if (!sessionStorage.getItem("admin_auth")) {
+    window.location.href = "admin-login.html";
+  }
+</script>
+
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="page">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">⚡</div>
+      <div>
+        <div class="topbar-title">Legends Admin</div>
+        <div class="topbar-sub">PANEL DE CONTROL</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">SALIR</button>
+  </div>
+
+  <!-- WELCOME -->
+  <div class="welcome">
+    <div class="welcome-greeting">// ACCESO AUTORIZADO</div>
+    <div class="welcome-title">Panel de<br><span>Control</span></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">HOY</div>
+      <div class="stat-value" id="statHoy">—<span id="statHoyTxt"></span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">USUARIOS</div>
+      <div class="stat-value" id="statUsers">—</div>
+    </div>
+  </div>
+
+  <div class="pulse-line"></div>
+
+  <!-- MENU -->
+  <div class="section-title">
+    <div class="section-title-text">Módulos</div>
+    <div class="section-title-line"></div>
+  </div>
+
+  <div class="menu-grid">
+
+    <a class="menu-card" href="admin-registros.html">
+      <div class="menu-icon icon-registros">📋</div>
+      <div class="menu-info">
+        <div class="menu-title">Registros</div>
+        <div class="menu-desc">Historial de consultas por agente, tipo y fecha</div>
+      </div>
+      <div class="menu-badge badge-blue">VER</div>
+      <div class="menu-arrow">→</div>
+    </a>
+
+    <a class="menu-card" href="admin-usuarios.html">
+      <div class="menu-icon icon-usuarios">👥</div>
+      <div class="menu-info">
+        <div class="menu-title">Usuarios</div>
+        <div class="menu-desc">Alta, baja y edición de agentes del sistema</div>
+      </div>
+      <div class="menu-badge badge-purple">GESTIONAR</div>
+      <div class="menu-arrow">→</div>
+    </a>
+
+    <a class="menu-card" href="admin-tunel.html">
+      <div class="menu-icon icon-tunel">🔗</div>
+      <div class="menu-info">
+        <div class="menu-title">Túnel</div>
+        <div class="menu-desc">Actualizar URL del Cloudflare Tunnel activo</div>
+      </div>
+      <div class="menu-badge badge-orange">CONFIG</div>
+      <div class="menu-arrow">→</div>
+    </a>
+
+  </div>
+
+  <div class="footer">LEGENDS BOT ADMIN · VTR/CLARO · v2.0</div>
+
+</div>
+
+<script>
+const API_BASE = ""; // Se carga desde config si aplica
+
+function logout() {
+  sessionStorage.removeItem("admin_auth");
+  window.location.href = "admin-login.html";
+}
+
+// Cargar stats básicas desde Google Sheets
+async function loadStats() {
+  try {
+    // Stats de hoy desde registros
+    const res = await fetch(API_BASE + "/admin/stats", {
+      headers: { "x-admin-token": "admin" }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.consultasHoy !== undefined) {
+      document.getElementById("statHoy").innerHTML =
+        data.consultasHoy + '<span>CONSULTAS</span>';
+    }
+    if (data.totalUsuarios !== undefined) {
+      document.getElementById("statUsers").textContent = data.totalUsuarios;
+    }
+  } catch (e) {
+    // Stats no disponibles, queda en —
+  }
+}
+
+loadStats();
+</script>
+
+</body>
+</html>

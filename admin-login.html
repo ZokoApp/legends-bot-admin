@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Admin — Legends Bot</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: rgba(255,255,255,0.06);
+    --accent: #ff4d1c;
+    --accent2: #ff8c42;
+    --text: #f0f0f0;
+    --muted: #555;
+    --success: #00e676;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* GRID BACKGROUND */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,77,28,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,77,28,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+  }
+
+  /* SCANLINE */
+  .scanline {
+    position: fixed;
+    top: -100%;
+    left: 0;
+    right: 0;
+    height: 200%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 49%,
+      rgba(255,77,28,0.015) 50%,
+      transparent 51%,
+      transparent 100%
+    );
+    background-size: 100% 4px;
+    animation: scan 8s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(50%); }
+  }
+
+  /* GLOW ORBS */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.12;
+    z-index: 0;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+
+  .orb-1 {
+    width: 400px; height: 400px;
+    background: var(--accent);
+    top: -100px; right: -100px;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 300px; height: 300px;
+    background: #ff8c42;
+    bottom: -80px; left: -80px;
+    animation-delay: -6s;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(30px, 20px) scale(1.1); }
+  }
+
+  /* MAIN CARD */
+  .card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 380px;
+    padding: 20px;
+  }
+
+  /* HEADER */
+  .brand {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .brand-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    box-shadow: 0 0 40px rgba(255,77,28,0.3);
+    animation: iconPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes iconPulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(255,77,28,0.3); }
+    50% { box-shadow: 0 0 60px rgba(255,77,28,0.5); }
+  }
+
+  .brand-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .brand-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .brand-name span {
+    color: var(--accent);
+  }
+
+  /* STATUS BAR */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,230,118,0.05);
+    border: 1px solid rgba(0,230,118,0.12);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--success);
+    letter-spacing: 1px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* FORM */
+  .form-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+  }
+
+  .form-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  /* CODE INPUT — estilo PIN */
+  .pin-wrap {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .pin-char {
+    width: 48px;
+    height: 56px;
+    background: #0a0a0a;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .pin-char.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,77,28,0.15);
+  }
+
+  .pin-char.filled {
+    border-color: rgba(255,77,28,0.4);
+  }
+
+  .pin-char .cursor {
+    width: 2px;
+    height: 24px;
+    background: var(--accent);
+    animation: cursorBlink 1s ease-in-out infinite;
+    display: none;
+  }
+
+  .pin-char.active .cursor { display: block; }
+  .pin-char.active .char-val { display: none; }
+
+  @keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Hidden real input */
+  #codeInput {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  /* BTN */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(255,77,28,0.3);
+  }
+
+  .btn:hover { opacity: 0.9; box-shadow: 0 4px 30px rgba(255,77,28,0.5); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ERROR */
+  .error-msg {
+    margin-top: 14px;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 1px;
+    display: none;
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* BOOT OVERLAY */
+  #bootOverlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  .boot-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    animation: bootPulse 0.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes bootPulse {
+    from { transform: scale(0.95); box-shadow: 0 0 30px rgba(255,77,28,0.3); }
+    to   { transform: scale(1.05); box-shadow: 0 0 60px rgba(255,77,28,0.6); }
+  }
+
+  .boot-lines {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-align: center;
+    line-height: 2;
+  }
+
+  .boot-line {
+    opacity: 0;
+    animation: fadeInLine 0.3s ease forwards;
+  }
+
+  .boot-bar-wrap {
+    width: 200px;
+    height: 2px;
+    background: rgba(255,77,28,0.15);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .boot-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  @keyframes fadeInLine {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SUCCESS OVERLAY */
+  #successOverlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(0,230,118,0.1);
+    border: 2px solid var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    animation: successPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes successPop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .success-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--success);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: #2a2a2a;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- BOOT OVERLAY -->
+<div id="bootOverlay">
+  <div class="boot-icon">⚡</div>
+  <div class="boot-lines" id="bootLines"></div>
+  <div class="boot-bar-wrap">
+    <div class="boot-bar" id="bootBar"></div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div id="successOverlay">
+  <div class="success-icon">✓</div>
+  <div class="success-text">ACCESO CONCEDIDO</div>
+</div>
+
+<!-- MAIN -->
+<div class="card">
+
+  <div class="brand">
+    <div class="brand-icon">⚡</div>
+    <div class="brand-tag">Sistema de Control</div>
+    <div class="brand-name">Legends <span>Admin</span></div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-dot"></div>
+    SISTEMA OPERATIVO · ACCESO RESTRINGIDO
+  </div>
+
+  <div class="form-box">
+    <label class="form-label">Código de acceso</label>
+
+    <div class="pin-wrap" id="pinWrap">
+      <!-- generado por JS -->
+    </div>
+
+    <input type="tel" id="codeInput" maxlength="10" autocomplete="off">
+
+    <button class="btn" id="btnAcceder" onclick="verificar()">
+      <span>⚡</span> Acceder al sistema
+    </button>
+
+    <div class="error-msg" id="errorMsg">CÓDIGO INCORRECTO — ACCESO DENEGADO</div>
+  </div>
+
+  <div class="footer">LEGENDS BOT ADMIN · VTR/CLARO · v2.0</div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────
+const CODE_LENGTH = 5; // Ajustá según el código real
+const ADMIN_CODE  = "12345"; // Se puede reemplazar por fetch al backend
+
+// ─── BOOT SEQUENCE ────────────────────────────
+const bootMessages = [
+  "INICIANDO SISTEMA...",
+  "CARGANDO MÓDULOS...",
+  "VERIFICANDO PERMISOS...",
+  "LISTO."
+];
+
+async function boot() {
+  const linesEl = document.getElementById("bootLines");
+  const bar     = document.getElementById("bootBar");
+
+  for (let i = 0; i < bootMessages.length; i++) {
+    const line = document.createElement("div");
+    line.className = "boot-line";
+    line.style.animationDelay = `${i * 0.4}s`;
+    line.textContent = bootMessages[i];
+    linesEl.appendChild(line);
+    bar.style.width = `${((i + 1) / bootMessages.length) * 100}%`;
+    await sleep(400);
+  }
+
+  await sleep(400);
+  document.getElementById("bootOverlay").style.opacity = "0";
+  document.getElementById("bootOverlay").style.transition = "opacity 0.5s";
+  await sleep(500);
+  document.getElementById("bootOverlay").style.display = "none";
+  document.getElementById("codeInput").focus();
+}
+
+// ─── PIN UI ───────────────────────────────────
+function buildPin() {
+  const wrap = document.getElementById("pinWrap");
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    const div = document.createElement("div");
+    div.className = "pin-char" + (i === 0 ? " active" : "");
+    div.id = `pin-${i}`;
+    div.innerHTML = `<span class="char-val"></span><div class="cursor"></div>`;
+    div.onclick = () => document.getElementById("codeInput").focus();
+    wrap.appendChild(div);
+  }
+}
+
+function updatePin(val) {
+  for (let i = 0; i < CODE_LENGTH; i++) {
+    const el = document.getElementById(`pin-${i}`);
+    const charVal = el.querySelector(".char-val");
+    el.classList.remove("active", "filled");
+
+    if (i < val.length) {
+      charVal.textContent = "●";
+      el.classList.add("filled");
+    } else {
+      charVal.textContent = "";
+    }
+
+    if (i === val.length && i < CODE_LENGTH) {
+      el.classList.add("active");
+    }
+  }
+}
+
+document.getElementById("codeInput").addEventListener("input", function() {
+  const val = this.value.replace(/\D/g, "").slice(0, CODE_LENGTH);
+  this.value = val;
+  updatePin(val);
+
+  if (val.length === CODE_LENGTH) {
+    setTimeout(verificar, 150);
+  }
+});
+
+document.getElementById("codeInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") verificar();
+});
+
+// ─── VERIFICAR ────────────────────────────────
+async function verificar() {
+  const val = document.getElementById("codeInput").value.trim();
+  if (!val) return;
+
+  const btn = document.getElementById("btnAcceder");
+  btn.disabled = true;
+  btn.innerHTML = "<span>⏳</span> Verificando...";
+
+  await sleep(600);
+
+  if (val === ADMIN_CODE) {
+    sessionStorage.setItem("admin_auth", "true");
+    showSuccess();
+  } else {
+    showError();
+    btn.disabled = false;
+    btn.innerHTML = "<span>⚡</span> Acceder al sistema";
+  }
+}
+
+function showSuccess() {
+  const overlay = document.getElementById("successOverlay");
+  overlay.style.display = "flex";
+  overlay.style.animation = "none";
+  setTimeout(() => {
+    window.location.href = "admin-home.html";
+  }, 1200);
+}
+
+function showError() {
+  const err = document.getElementById("errorMsg");
+  const input = document.getElementById("codeInput");
+  err.style.display = "block";
+  err.style.animation = "none";
+  void err.offsetWidth;
+  err.style.animation = "shake 0.4s ease";
+  input.value = "";
+  updatePin("");
+  document.getElementById("codeInput").focus();
+  setTimeout(() => { err.style.display = "none"; }, 3000);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── INIT ─────────────────────────────────────
+buildPin();
+boot();
+
+// Click en pin area → focus input
+document.getElementById("pinWrap").onclick = () => {
+  document.getElementById("codeInput").focus();
+};
+</script>
+</body>
+</html>

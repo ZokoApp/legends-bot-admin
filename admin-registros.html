@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Registros — Legends Admin</title>
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: rgba(255,255,255,0.06);
+    --accent: #ff4d1c;
+    --accent2: #ff8c42;
+    --text: #f0f0f0;
+    --muted: #555;
+    --blue: #3b82f6;
+    --success: #00e676;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0; pointer-events: none;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(100px); opacity: 0.07;
+    z-index: 0; pointer-events: none;
+  }
+  .orb-1 { width: 400px; height: 400px; background: var(--blue); top: -100px; right: -100px; }
+
+  .page {
+    position: relative; z-index: 10;
+    max-width: 420px; margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex; align-items: center;
+    gap: 14px; padding: 20px 0 24px;
+  }
+
+  .btn-back {
+    width: 38px; height: 38px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted);
+    font-size: 1rem; transition: all 0.2s;
+    flex-shrink: 0; text-decoration: none;
+  }
+  .btn-back:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+  .topbar-info { flex: 1; }
+  .topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .topbar-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem; color: var(--muted);
+    letter-spacing: 1px; margin-top: 2px;
+  }
+
+  .btn-refresh {
+    width: 38px; height: 38px;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .btn-refresh:hover { background: rgba(59,130,246,0.15); }
+  .btn-refresh.spinning { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* FILTROS */
+  .filtros {
+    display: flex; gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .filtros::-webkit-scrollbar { display: none; }
+
+  .filtro-btn {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem; letter-spacing: 1px;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filtro-btn.active {
+    background: rgba(59,130,246,0.1);
+    border-color: rgba(59,130,246,0.3);
+    color: #60a5fa;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative; margin-bottom: 16px;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: rgba(59,130,246,0.4); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-icon {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  /* STATS MINI */
+  .stats-mini {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+
+  .stat-mini {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-mini-val {
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--text); line-height: 1;
+  }
+
+  .stat-mini-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem; color: var(--muted);
+    letter-spacing: 1px; margin-top: 4px;
+  }
+
+  /* LOADING */
+  .loading-state {
+    text-align: center; padding: 60px 20px;
+  }
+  .loader {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    display: none;
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+  .empty-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem; color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* REGISTROS LIST */
+  #listaRegistros { display: none; }
+
+  .registro-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .registro-card:hover {
+    border-color: rgba(59,130,246,0.2);
+    background: var(--surface2);
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(10px); }
+  }
+
+  .registro-top {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px;
+  }
+
+  .registro-agente {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .agente-avatar {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .agente-name {
+    font-size: 0.85rem; font-weight: 600;
+    color: var(--text);
+  }
+
+  .tipo-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; padding: 4px 8px;
+    border-radius: 6px; letter-spacing: 0.5px;
+  }
+
+  .tipo-estado   { background: rgba(234,179,8,0.1);  color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
+  .tipo-boleta   { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+  .tipo-agenda   { background: rgba(0,230,118,0.08); color: #34d399; border: 1px solid rgba(0,230,118,0.15); }
+  .tipo-fact     { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+  .tipo-default  { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+
+  .registro-rut {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem; color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .registro-resultado {
+    font-size: 0.72rem; color: var(--muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .registro-fecha {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; color: var(--muted);
+    margin-top: 10px; letter-spacing: 0.5px;
+  }
+
+  /* DETAIL MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal-card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px 24px 20px 20px;
+    padding: 24px;
+    width: 100%; max-width: 420px;
+    max-height: 70vh; overflow-y: auto;
+    animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-top {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 20px;
+  }
+
+  .modal-title { font-size: 1rem; font-weight: 700; }
+
+  .btn-close-modal {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px;
+    color: var(--muted); cursor: pointer;
+    font-size: 0.8rem; transition: all 0.2s;
+  }
+  .btn-close-modal:hover { color: var(--text); }
+
+  .modal-row {
+    margin-bottom: 14px;
+  }
+
+  .modal-row-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem; color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .modal-row-val {
+    font-size: 0.85rem; color: var(--text);
+    line-height: 1.5; word-break: break-word;
+  }
+
+  .modal-divider {
+    height: 1px; background: var(--border);
+    margin: 16px 0;
+  }
+</style>
+</head>
+<body>
+
+<script>
+  if (!sessionStorage.getItem("admin_auth")) window.location.href = "admin-login.html";
+</script>
+
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a class="btn-back" href="admin-home.html">←</a>
+    <div class="topbar-info">
+      <div class="topbar-title">Registros</div>
+      <div class="topbar-sub">HISTORIAL DE CONSULTAS</div>
+    </div>
+    <div class="btn-refresh" id="btnRefresh" onclick="cargarRegistros()">🔄</div>
+  </div>
+
+  <!-- STATS MINI -->
+  <div class="stats-mini">
+    <div class="stat-mini">
+      <div class="stat-mini-val" id="totalHoy">—</div>
+      <div class="stat-mini-label">HOY</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val" id="totalSemana">—</div>
+      <div class="stat-mini-label">SEMANA</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-val" id="totalTotal">—</div>
+      <div class="stat-mini-label">TOTAL</div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="setFiltro('todos', this)">TODOS</button>
+    <button class="filtro-btn" onclick="setFiltro('Estado RUT', this)">ESTADO RUT</button>
+    <button class="filtro-btn" onclick="setFiltro('Boleta', this)">BOLETA</button>
+    <button class="filtro-btn" onclick="setFiltro('Agenda', this)">AGENDA</button>
+    <button class="filtro-btn" onclick="setFiltro('Factibilidad', this)">FACT.</button>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar por agente o RUT..." oninput="renderRegistros()">
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-state" id="loadingState">
+    <div class="loader"></div>
+    <div class="loading-text">CARGANDO REGISTROS...</div>
+  </div>
+
+  <!-- EMPTY -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">SIN REGISTROS</div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="listaRegistros"></div>
+
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-card" id="modalCard">
+    <div class="modal-top">
+      <div class="modal-title">Detalle</div>
+      <button class="btn-close-modal" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────
+const SHEET_ID  = "1D5vc8lfgx0NGUPbZLMbzbReRrrwV1ZKmOcpf8m2TMro";
+const API_KEY   = ""; // Opcional — dejamos vacío y usamos endpoint propio
+const API_BASE  = localStorage.getItem("legends_api") || "";
+
+let todosLosRegistros = [];
+let filtroActivo = "todos";
+
+// ─── COLORES AVATAR ───────────────────────────
+const avatarColors = [
+  ["#ff4d1c","#1a0a00"],["#3b82f6","#0a1628"],
+  ["#a855f7","#1a0a28"],["#00e676","#001a0f"],
+  ["#fbbf24","#1a1000"],["#f472b6","#1a0010"],
+];
+
+function getAvatarColor(name) {
+  let h = 0;
+  for (let c of (name||"")) h = c.charCodeAt(0) + ((h<<5)-h);
+  return avatarColors[Math.abs(h) % avatarColors.length];
+}
+
+function getInitials(name) {
+  return (name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+}
+
+// ─── TIPO BADGE CLASS ─────────────────────────
+function tipoBadgeClass(tipo) {
+  if (!tipo) return "tipo-default";
+  const t = tipo.toLowerCase();
+  if (t.includes("estado") || t.includes("rut")) return "tipo-estado";
+  if (t.includes("boleta")) return "tipo-boleta";
+  if (t.includes("agenda")) return "tipo-agenda";
+  if (t.includes("fact")) return "tipo-fact";
+  return "tipo-default";
+}
+
+// ─── CARGAR DESDE BACKEND ─────────────────────
+async function cargarRegistros() {
+  document.getElementById("loadingState").style.display = "block";
+  document.getElementById("listaRegistros").style.display = "none";
+  document.getElementById("emptyState").style.display = "none";
+
+  const btn = document.getElementById("btnRefresh");
+  btn.classList.add("spinning");
+
+  try {
+    const res = await fetch(API_BASE + "/admin/registros");
+    const data = await res.json();
+
+    if (data.ok && data.registros) {
+      todosLosRegistros = data.registros;
+    } else {
+      todosLosRegistros = [];
+    }
+  } catch(e) {
+    todosLosRegistros = [];
+  }
+
+  btn.classList.remove("spinning");
+  calcularStats();
+  renderRegistros();
+}
+
+// ─── STATS ────────────────────────────────────
+function calcularStats() {
+  const hoy = new Date().toLocaleDateString("es-CL");
+  const hace7 = new Date(Date.now() - 7*24*60*60*1000);
+
+  const countHoy = todosLosRegistros.filter(r => {
+    return r.fecha && r.fecha.startsWith(hoy.split("/").reverse().join("-").slice(2));
+  }).length;
+
+  // Semana aproximada
+  const countSemana = todosLosRegistros.filter(r => {
+    try {
+      const parts = r.fecha.split(/[/, :]/);
+      return true; // Contar todos si no podemos parsear bien
+    } catch { return false; }
+  }).length;
+
+  document.getElementById("totalHoy").textContent = todosLosRegistros.filter(r => {
+    const d = new Date();
+    const fechaHoy = `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+    return r.fecha && r.fecha.includes(fechaHoy.slice(0,5));
+  }).length;
+
+  document.getElementById("totalSemana").textContent =
+    Math.min(todosLosRegistros.length, 999);
+  document.getElementById("totalTotal").textContent = todosLosRegistros.length;
+}
+
+// ─── RENDER ───────────────────────────────────
+function renderRegistros() {
+  const search = document.getElementById("searchInput").value.toLowerCase().trim();
+  const lista  = document.getElementById("listaRegistros");
+  const loading = document.getElementById("loadingState");
+  const empty   = document.getElementById("emptyState");
+
+  let items = todosLosRegistros;
+
+  if (filtroActivo !== "todos") {
+    items = items.filter(r => (r.tipo||"").toLowerCase().includes(filtroActivo.toLowerCase()));
+  }
+
+  if (search) {
+    items = items.filter(r =>
+      (r.agente||"").toLowerCase().includes(search) ||
+      (r.rut||"").toLowerCase().includes(search)
+    );
+  }
+
+  loading.style.display = "none";
+
+  if (items.length === 0) {
+    lista.style.display = "none";
+    empty.style.display = "block";
+    return;
+  }
+
+  empty.style.display = "none";
+  lista.style.display = "block";
+  lista.innerHTML = "";
+
+  items.slice(0, 100).forEach((r, i) => {
+    const [bg, fg] = getAvatarColor(r.agente);
+    const initials = getInitials(r.agente);
+    const badgeClass = tipoBadgeClass(r.tipo);
+
+    const card = document.createElement("div");
+    card.className = "registro-card";
+    card.style.animationDelay = `${i * 0.04}s`;
+    card.onclick = () => openModal(r);
+
+    card.innerHTML = `
+      <div class="registro-top">
+        <div class="registro-agente">
+          <div class="agente-avatar" style="background:${bg};color:${fg}">${initials}</div>
+          <div class="agente-name">${r.agente || "Desconocido"}</div>
+        </div>
+        <div class="tipo-badge ${badgeClass}">${r.tipo || "—"}</div>
+      </div>
+      <div class="registro-rut">📌 ${r.rut || "—"}</div>
+      <div class="registro-resultado">${r.resultado || "Sin resultado"}</div>
+      <div class="registro-fecha">🕐 ${r.fecha || "—"}</div>
+    `;
+
+    lista.appendChild(card);
+  });
+}
+
+// ─── FILTRO ───────────────────────────────────
+function setFiltro(tipo, btn) {
+  filtroActivo = tipo;
+  document.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderRegistros();
+}
+
+// ─── MODAL ────────────────────────────────────
+function openModal(r) {
+  const content = document.getElementById("modalContent");
+  content.innerHTML = `
+    <div class="modal-row">
+      <div class="modal-row-label">Agente</div>
+      <div class="modal-row-val">${r.agente || "—"}</div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-row">
+      <div class="modal-row-label">Tipo de consulta</div>
+      <div class="modal-row-val">${r.tipo || "—"}</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-label">RUT / Dirección</div>
+      <div class="modal-row-val">${r.rut || "—"}</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-row-label">Fecha y hora</div>
+      <div class="modal-row-val">${r.fecha || "—"}</div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-row">
+      <div class="modal-row-label">Resultado</div>
+      <div class="modal-row-val" style="font-size:0.78rem;color:#aaa">${r.resultado || "Sin resultado"}</div>
+    </div>
+  `;
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById("modalOverlay")) {
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+}
+
+// ─── INIT ─────────────────────────────────────
+cargarRegistros();
+</script>
+
+</body>
+</html>
