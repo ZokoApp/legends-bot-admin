@@ -504,8 +504,9 @@
   <!-- HISTORIAL -->
   <div class="historial-card">
     <div class="historial-title">
-      🕐 Historial
-    </div>
+  🕐 Historial
+  <button onclick="limpiarHistorial()" style="margin-left:auto;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:4px 10px;color:#ef4444;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;cursor:pointer;">LIMPIAR</button>
+</div>
     <div id="historialList">
       <div class="hist-empty">SIN HISTORIAL</div>
     </div>
@@ -546,6 +547,13 @@ async function cargarUrlActual() {
   } catch(e) {
     document.getElementById("urlActual").textContent = "Error al cargar";
   }
+}
+
+  function limpiarHistorial() {
+  historial = [];
+  localStorage.removeItem("tunel_historial");
+  renderHistorial();
+  showToast("Historial limpiado ✓", "ok");
 }
 
 // ─── PING ─────────────────────────────────────
