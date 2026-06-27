@@ -621,6 +621,9 @@ function closeModal(e) {
     document.getElementById("modalOverlay").classList.remove("open");
   }
 }
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 
 // ─── INIT ─────────────────────────────────────
 cargarRegistros();
