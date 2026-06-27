@@ -633,31 +633,37 @@ function closeConfirm() {
   pendingUrl = "";
 }
 
-// ─── EJECUTAR UPDATE ──────────────────────────
+function closeConfirm() {
+  document.getElementById("confirmOverlay").classList.remove("open");
+}
+
 async function ejecutarUpdate() {
+  const urlToUpdate = pendingUrl; // guardamos antes de cerrar
   closeConfirm();
+
+  if (!urlToUpdate) return;
 
   const btn = document.querySelector(".btn-update");
   btn.disabled = true;
   btn.innerHTML = "<span>⏳</span> Actualizando...";
 
   try {
-    const res  = await fetch(API_BASE + "/admin/tunel", {
+    const res = await fetch(API_BASE + "/admin/tunel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: pendingUrl })
+      body: JSON.stringify({ url: urlToUpdate })
     });
     const data = await res.json();
 
     if (data.ok) {
       showToast("Túnel actualizado ✓", "ok");
-      urlActual = pendingUrl;
-      document.getElementById("urlActual").textContent = pendingUrl;
+      urlActual = urlToUpdate;
+      document.getElementById("urlActual").textContent = urlToUpdate;
       document.getElementById("nuevaUrl").value = "";
+      pendingUrl = "";
 
-      // Guardar en historial local
       historial.unshift({
-        url: pendingUrl,
+        url: urlToUpdate,
         fecha: new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" }),
         ok: true
       });
@@ -665,7 +671,6 @@ async function ejecutarUpdate() {
       localStorage.setItem("tunel_historial", JSON.stringify(historial));
       renderHistorial();
 
-      // Re-verificar ping
       setTimeout(verificarPing, 1500);
     } else {
       showToast(data.error || "Error al actualizar", "err");
