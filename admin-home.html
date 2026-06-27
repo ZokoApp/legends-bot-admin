@@ -469,9 +469,7 @@ function logout() {
 async function loadStats() {
   try {
     // Stats de hoy desde registros
-    const res = await fetch(API_BASE + "/admin/stats", {
-      headers: { "x-admin-token": "admin" }
-    });
+    const res = await fetch(API_BASE + "/admin/stats");
     if (!res.ok) return;
     const data = await res.json();
     if (data.consultasHoy !== undefined) {
