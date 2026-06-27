@@ -355,6 +355,7 @@
   }
 </style>
   <script src="config.js"></script>
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
@@ -681,6 +682,9 @@ function showToast(msg, type = "ok") {
   t.className = `toast ${type} show`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
 }
 
 // ─── INIT ─────────────────────────────────────
